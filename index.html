@@ -200,6 +200,9 @@
                         <select id="filter-sales-group" onchange="window.renderSales()" class="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 shadow-sm focus:ring-2 focus:ring-blue-500">
                             <option value="all">All Customer Groups</option>
                         </select>
+                        <button id="btn-load-all-bills" onclick="window.loadAllBills()" class="w-full p-2.5 bg-blue-600 text-white border border-blue-700 rounded-lg text-[10px] font-bold shadow-sm active:scale-95 flex justify-center items-center">
+                            <i class="fas fa-sync-alt mr-1.5"></i> Load All History
+                        </button>
                     </div>
                 </div>
                 <div id="sales-list" class="space-y-1.5 pb-2"></div>
@@ -349,7 +352,7 @@
                 <div class="text-center font-bold mt-1 text-[10px] pb-2">THANK YOU! VISIT AGAIN</div>
             </div>
             
-            <div class="no-print w-full max-w-[340px] mx-auto grid grid-cols-3 gap-2 pb-6">
+            <div class="no-print w-full max-w-[340px] mx-auto grid grid-cols-2 gap-2 pb-6">
                 <button onclick="window.sharePDF()" class="bg-slate-100 text-slate-800 font-bold p-3 rounded-lg shadow-lg flex flex-col items-center justify-center text-[10px] active:scale-95">
                     <i class="fas fa-print text-xl mb-1 text-slate-600"></i> Print 80mm
                 </button>
@@ -358,6 +361,9 @@
                 </button>
                 <button onclick="window.shareWA()" class="bg-[#25D366] text-white font-bold p-3 rounded-lg shadow-lg flex flex-col items-center justify-center text-[10px] active:scale-95">
                     <i class="fab fa-whatsapp text-xl mb-1"></i> Text Receipt
+                </button>
+                <button onclick="document.getElementById('modal-bill').classList.add('hidden'); window.loadBillToPOS(window.currentBillId)" class="bg-amber-500 text-white font-bold p-3 rounded-lg shadow-lg flex flex-col items-center justify-center text-[10px] active:scale-95">
+                    <i class="fas fa-edit text-xl mb-1"></i> Edit in POS
                 </button>
             </div>
         </div>
@@ -755,10 +761,10 @@
                 
                 window.erpData.products = await runQuery("SELECT id, name, rate, stock, unit_main, unit_pack, conv_factor FROM products ORDER BY name");
                 window.erpData.customers = await runQuery("SELECT name, mobile, balance, whatsapp, group_name FROM customers ORDER BY name");
-                window.erpData.bills = await runQuery("SELECT id, bill_no, customer_name, sub_total, grand_total, paid, balance_due, created_at, bill_data, old_balance, payment_mode, narration FROM bills ORDER BY id DESC");
+                window.erpData.bills = await runQuery("SELECT id, bill_no, customer_name, sub_total, grand_total, paid, balance_due, created_at, bill_data, old_balance, payment_mode, narration FROM bills ORDER BY id DESC LIMIT 150");
                 
                 try { 
-                    window.erpData.payments = await runQuery("SELECT id, customer_name, amount_paid, created_at FROM payment_history ORDER BY id DESC"); 
+                    window.erpData.payments = await runQuery("SELECT id, customer_name, amount_paid, created_at FROM payment_history ORDER BY id DESC LIMIT 200"); 
                 } catch(e) { window.erpData.payments = []; }
                 
                 try { 
@@ -1345,9 +1351,25 @@
             }
         };
         
-        // ========================================================
-        // SALES REGISTER RENDER
-        // ========================================================
+        window.loadAllBills = async function() {
+            const btn = document.getElementById('btn-load-all-bills');
+            if (!btn) return;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Loading all bills...';
+            btn.disabled = true;
+            try {
+                window.erpData.bills = await runQuery("SELECT id, bill_no, customer_name, sub_total, grand_total, paid, balance_due, created_at, bill_data, old_balance, payment_mode, narration FROM bills ORDER BY id DESC");
+                window.erpData.payments = await runQuery("SELECT id, customer_name, amount_paid, created_at FROM payment_history ORDER BY id DESC");
+                window.renderSales();
+                btn.innerHTML = '<i class="fas fa-check mr-1.5"></i> All History Loaded';
+                btn.classList.remove('bg-blue-600','border-blue-700');
+                btn.classList.add('bg-emerald-600','border-emerald-700');
+            } catch(e) {
+                alert("Error loading full history: " + e.message);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
         window.renderSales = function() {
             const val = (document.getElementById('search-sales').value || "").toLowerCase();
             const timeFilter = document.getElementById('filter-sales-time').value;
@@ -1554,47 +1576,55 @@
             });
         };
         
-        window.openCustomerLedger = function(name, due) {
+        window.openCustomerLedger = async function(name, due) {
             document.getElementById('cl-name').innerText = name;
             document.getElementById('cl-due').innerText = '' + Number(due).toLocaleString('en-IN');
+            document.getElementById('cl-list').innerHTML = '<p class="text-center text-xs text-slate-400 py-6"><i class="fas fa-spinner fa-spin mr-1"></i> Loading full history...</p>';
+            document.getElementById('modal-cust-ledger').classList.remove('hidden');
             
-            let history = [];
-            window.erpData.bills.filter(b => b.customer_name === name).forEach(b => {
-                history.push({ type: 'Bill', ref: b.bill_no, amt: b.grand_total, date: b.created_at, id: b.id });
-            });
-            
-            if (window.erpData.payments) {
-                window.erpData.payments.filter(p => p.customer_name === name).forEach(p => {
+            try {
+                const safeName = name.replace(/'/g, "''");
+                const custBills = await runQuery("SELECT id, bill_no, customer_name, grand_total, created_at FROM bills WHERE customer_name = '" + safeName + "' ORDER BY id DESC");
+                const custPayments = await runQuery("SELECT customer_name, amount_paid, created_at FROM payment_history WHERE customer_name = '" + safeName + "' ORDER BY id DESC");
+                
+                let history = [];
+                custBills.forEach(b => {
+                    history.push({ type: 'Bill', ref: b.bill_no, amt: b.grand_total, date: b.created_at, id: b.id });
+                });
+                custPayments.forEach(p => {
                     history.push({ type: 'Payment', ref: 'Receipt', amt: p.amount_paid, date: p.created_at });
                 });
+                
+                history.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                let listHtml = '';
+                if (history.length === 0) { 
+                    listHtml = '<p class="text-center text-xs text-slate-400 py-6">No transactions found.</p>'; 
+                } else {
+                    history.forEach(item => {
+                        let dt = String(item.date).substring(0, 10);
+                        if (item.type === 'Bill') {
+                            listHtml += '<div onclick="document.getElementById(\'modal-cust-ledger\').classList.add(\'hidden\'); window.viewBill(' + item.id + ');" class="flex justify-between items-center p-3 mb-2 rounded-xl bg-rose-50 border border-rose-200 active:bg-rose-100 cursor-pointer shadow-sm">' +
+                                '<div><p class="text-[11px] font-bold text-rose-900 underline decoration-rose-300">Bill: ' + item.ref + '</p><p class="text-[9px] font-bold text-slate-500 mt-1">' + dt + '</p></div>' +
+                                '<p class="text-[13px] font-black text-rose-600">+' + Number(item.amt).toLocaleString('en-IN') + '</p></div>';
+                        } else {
+                            listHtml += '<div class="flex justify-between items-center p-3 mb-2 rounded-xl bg-emerald-50 border border-emerald-200 shadow-sm">' +
+                                '<div><p class="text-[11px] font-bold text-emerald-900">Payment Received</p><p class="text-[9px] font-bold text-slate-500 mt-1">' + dt + '</p></div>' +
+                                '<p class="text-[13px] font-black text-emerald-600">-' + Number(item.amt).toLocaleString('en-IN') + '</p></div>';
+                        }
+                    });
+                }
+                
+                document.getElementById('cl-list').innerHTML = listHtml;
+            } catch(e) {
+                document.getElementById('cl-list').innerHTML = '<p class="text-center text-xs text-rose-500 py-6">Error loading history.</p>';
+                console.error(e);
             }
             
-            history.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            let listHtml = '';
-            if (history.length === 0) { 
-                listHtml = '<p class="text-center text-xs text-slate-400 py-6">No recent transactions.</p>'; 
-            } else {
-                history.forEach(item => {
-                    let dt = String(item.date).substring(0, 10);
-                    if (item.type === 'Bill') {
-                        listHtml += '<div onclick="document.getElementById(\'modal-cust-ledger\').classList.add(\'hidden\'); window.viewBill(' + item.id + ');" class="flex justify-between items-center p-3 mb-2 rounded-xl bg-rose-50 border border-rose-200 active:bg-rose-100 cursor-pointer shadow-sm">' +
-                            '<div><p class="text-[11px] font-bold text-rose-900 underline decoration-rose-300">Bill: ' + item.ref + '</p><p class="text-[9px] font-bold text-slate-500 mt-1">' + dt + '</p></div>' +
-                            '<p class="text-[13px] font-black text-rose-600">+' + Number(item.amt).toLocaleString('en-IN') + '</p></div>';
-                    } else {
-                        listHtml += '<div class="flex justify-between items-center p-3 mb-2 rounded-xl bg-emerald-50 border border-emerald-200 shadow-sm">' +
-                            '<div><p class="text-[11px] font-bold text-emerald-900">Payment Received</p><p class="text-[9px] font-bold text-slate-500 mt-1">' + dt + '</p></div>' +
-                            '<p class="text-[13px] font-black text-emerald-600">-' + Number(item.amt).toLocaleString('en-IN') + '</p></div>';
-                    }
-                });
-            }
-            
-            document.getElementById('cl-list').innerHTML = listHtml;
             document.getElementById('btn-cl-pay').onclick = function() {
                 document.getElementById('modal-cust-ledger').classList.add('hidden');
                 window.openPayModal(name, due);
             };
-            document.getElementById('modal-cust-ledger').classList.remove('hidden');
         };
         
         window.openPayModal = function(name, due) {
