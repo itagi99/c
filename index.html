@@ -755,10 +755,10 @@
                 
                 window.erpData.products = await runQuery("SELECT id, name, rate, stock, unit_main, unit_pack, conv_factor FROM products ORDER BY name");
                 window.erpData.customers = await runQuery("SELECT name, mobile, balance, whatsapp, group_name FROM customers ORDER BY name");
-                window.erpData.bills = await runQuery("SELECT id, bill_no, customer_name, sub_total, grand_total, paid, balance_due, created_at, bill_data, old_balance, payment_mode, narration FROM bills ORDER BY id DESC LIMIT 150");
+                window.erpData.bills = await runQuery("SELECT id, bill_no, customer_name, sub_total, grand_total, paid, balance_due, created_at, bill_data, old_balance, payment_mode, narration FROM bills ORDER BY id DESC");
                 
                 try { 
-                    window.erpData.payments = await runQuery("SELECT id, customer_name, amount_paid, created_at FROM payment_history ORDER BY id DESC LIMIT 200"); 
+                    window.erpData.payments = await runQuery("SELECT id, customer_name, amount_paid, created_at FROM payment_history ORDER BY id DESC"); 
                 } catch(e) { window.erpData.payments = []; }
                 
                 try { 
@@ -1385,7 +1385,7 @@
             else if(sortFilter === 'oldest') filtered.sort((a,b) => a.id - b.id);
             else if(sortFilter === 'highest') filtered.sort((a,b) => Number(b.grand_total) - Number(a.grand_total));
             
-            filtered.slice(0, 50).forEach((b) => {
+            filtered.forEach((b) => {
                 const bno = b.bill_no || "Unknown", 
                       cust = b.customer_name || "Walk-in", 
                       amt = Number(b.grand_total || 0), 
@@ -1537,7 +1537,6 @@
             list.innerHTML = '';
             
             let filtered = window.erpData.customers.filter(c => {
-                if (Number(c.balance || 0) <= 0) return false;
                 if (!(c.name||"").toLowerCase().includes(val)) return false;
                 if (groupFilter !== 'all' && c.group_name !== groupFilter) return false;
                 return true;
