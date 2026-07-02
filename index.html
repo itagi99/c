@@ -418,6 +418,175 @@
                 </div>
                 <button onclick="window.saveMasterEdit()" class="w-full bg-emerald-600 text-white font-bold p-2.5 rounded-lg shadow active:scale-95 text-sm"><i class="fas fa-save mr-2"></i> Update Item</button>
             </div>
+        <!-- NEW ITEM CREATION MODAL (Triggered when item not found in billing) -->
+        <div id="modal-new-item" class="hidden modal-overlay bg-slate-900/90 flex flex-col justify-center items-center p-3 overflow-y-auto">
+            <div class="bg-white w-full max-w-[360px] rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+                <div class="p-3 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-blue-600 to-indigo-600 rounded-t-2xl shrink-0">
+                    <div class="flex items-center">
+                        <i class="fas fa-plus-circle text-white text-lg mr-2"></i>
+                        <div>
+                            <h3 class="font-bold text-white text-sm">Create New Item</h3>
+                            <p class="text-[9px] text-blue-200 font-medium">Add to Master Stock</p>
+                        </div>
+                    </div>
+                    <button onclick="window.closeNewItemModal()" class="text-white/80 hover:text-white text-xl px-2"><i class="fas fa-times"></i></button>
+                </div>
+
+                <div class="p-3 overflow-y-auto flex-1 hide-scroll space-y-2">
+                    <!-- Item Name -->
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Item Name / Alias</label>
+                        <input type="text" id="new-item-name" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="Enter item name...">
+                    </div>
+
+                    <!-- Group/Category -->
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Group / Category</label>
+                        <div class="flex space-x-1.5">
+                            <select id="new-item-group" class="flex-1 p-2.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-700 focus:ring-2 focus:ring-blue-500">
+                                <option value="General">General</option>
+                                <option value="Pooja Needs">Pooja Needs</option>
+                                <option value="Grocery">Grocery</option>
+                                <option value="Stationery">Stationery</option>
+                                <option value="Cosmetics">Cosmetics</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Hardware">Hardware</option>
+                                <option value="Medicine">Medicine</option>
+                            </select>
+                            <button onclick="window.promptNewGroup()" class="bg-emerald-500 text-white w-10 rounded-lg flex items-center justify-center active:scale-95 shadow-sm">
+                                <i class="fas fa-plus text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Units Section -->
+                    <div class="bg-blue-50/50 p-2.5 rounded-xl border border-blue-100 space-y-2">
+                        <p class="text-[10px] font-black text-blue-800 uppercase tracking-wider"><i class="fas fa-ruler-combined mr-1"></i> Unit Configuration</p>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Main Unit</label>
+                                <select id="new-item-unit-main" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                                    <option value="Pcs">Pcs</option>
+                                    <option value="Kg">Kg</option>
+                                    <option value="Gm">Gm</option>
+                                    <option value="Ltr">Ltr</option>
+                                    <option value="Ml">Ml</option>
+                                    <option value="Box">Box</option>
+                                    <option value="Pkt">Pkt</option>
+                                    <option value="Dozen">Dozen</option>
+                                    <option value="Meter">Meter</option>
+                                    <option value="Pair">Pair</option>
+                                    <option value="Set">Set</option>
+                                    <option value="Bottle">Bottle</option>
+                                    <option value="Jar">Jar</option>
+                                    <option value="Bag">Bag</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Opening Stock</label>
+                                <input type="number" id="new-item-stock" value="0" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-center text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Alternate Unit</label>
+                                <select id="new-item-unit-pack" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                                    <option value="">None</option>
+                                    <option value="Box">Box</option>
+                                    <option value="Pkt">Pkt</option>
+                                    <option value="Dozen">Dozen</option>
+                                    <option value="Kg">Kg</option>
+                                    <option value="Ltr">Ltr</option>
+                                    <option value="Case">Case</option>
+                                    <option value="Bundle">Bundle</option>
+                                    <option value="Carton">Carton</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Conv. Factor</label>
+                                <input type="number" id="new-item-conv-factor" value="1" step="0.01" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-center text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tax Section -->
+                    <div class="bg-amber-50/50 p-2.5 rounded-xl border border-amber-100 space-y-2">
+                        <p class="text-[10px] font-black text-amber-800 uppercase tracking-wider"><i class="fas fa-percentage mr-1"></i> Tax Details</p>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">GST %</label>
+                                <select id="new-item-gst" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                                    <option value="0">0%</option>
+                                    <option value="5" selected>5%</option>
+                                    <option value="12">12%</option>
+                                    <option value="18">18%</option>
+                                    <option value="28">28%</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">HSN/SAC Code</label>
+                                <input type="text" id="new-item-hsn" placeholder="123456" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-center text-xs font-bold focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pricing Section -->
+                    <div class="bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-100 space-y-2">
+                        <p class="text-[10px] font-black text-emerald-800 uppercase tracking-wider"><i class="fas fa-tags mr-1"></i> Pricing Structure</p>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1.5">
+                                <p class="text-[9px] font-bold text-emerald-700 uppercase text-center border-b border-emerald-200 pb-1">Main Unit</p>
+                                <div>
+                                    <label class="text-[9px] font-bold text-slate-500">Sales Price (&#8377;)</label>
+                                    <input type="number" id="new-item-sale-main" step="0.01" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-center text-xs font-bold focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="text-[9px] font-bold text-slate-500">Purchase Price (&#8377;)</label>
+                                    <input type="number" id="new-item-pur-main" step="0.01" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-center text-xs font-bold focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <p class="text-[9px] font-bold text-emerald-700 uppercase text-center border-b border-emerald-200 pb-1">Alternate Unit</p>
+                                <div>
+                                    <label class="text-[9px] font-bold text-slate-500">Sales Price (&#8377;)</label>
+                                    <input type="number" id="new-item-sale-pack" step="0.01" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-center text-xs font-bold focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="text-[9px] font-bold text-slate-500">Purchase Price (&#8377;)</label>
+                                    <input type="number" id="new-item-pur-pack" step="0.01" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-center text-xs font-bold focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 border-t border-slate-100 bg-white rounded-b-2xl shrink-0 space-y-2">
+                    <button onclick="window.saveNewItem()" class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black p-3 rounded-xl shadow-lg active:scale-95 transition-all text-sm flex justify-center items-center">
+                        <i class="fas fa-save mr-2"></i> Save Master Item
+                    </button>
+                    <button onclick="window.closeNewItemModal()" class="w-full bg-slate-100 text-slate-600 font-bold p-2.5 rounded-xl active:bg-slate-200 transition-colors text-xs">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Add Group Modal -->
+        <div id="modal-new-group" class="hidden fixed inset-0 z-[350] bg-slate-900/70 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-5">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-black text-slate-800 text-base"><i class="fas fa-folder-plus text-emerald-500 mr-2"></i>Add New Group</h3>
+                    <button onclick="document.getElementById('modal-new-group').classList.add('hidden')" class="text-slate-400 text-lg"><i class="fas fa-times"></i></button>
+                </div>
+                <input type="text" id="inp-new-group" placeholder="Enter group name..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold mb-4 focus:ring-2 focus:ring-emerald-500">
+                <button onclick="window.addNewGroup()" class="w-full bg-emerald-500 text-white font-bold p-3 rounded-lg shadow active:scale-95 text-sm"><i class="fas fa-plus mr-2"></i> Add Group</button>
+            </div>
+        </div>
+
         </div>
         
         <div id="install-prompt-modal" class="hidden fixed inset-0 z-[250] bg-slate-900/80 flex-col justify-end p-4 transition-opacity">
@@ -1742,6 +1911,210 @@
             }
         };
         
+
+        // ========================================================
+        // NEW ITEM CREATION SYSTEM (Billing-time Master Entry)
+        // ========================================================
+
+        window.closeNewItemModal = function() {
+            document.getElementById('modal-new-item').classList.add('hidden');
+            document.getElementById('modal-new-item').classList.remove('flex');
+        };
+
+        window.openNewItemModal = function(itemName) {
+            // Pre-fill the item name from what user typed
+            document.getElementById('new-item-name').value = itemName || '';
+            document.getElementById('new-item-stock').value = '0';
+            document.getElementById('new-item-conv-factor').value = '1';
+            document.getElementById('new-item-gst').value = '5';
+            document.getElementById('new-item-hsn').value = '';
+            document.getElementById('new-item-sale-main').value = '';
+            document.getElementById('new-item-pur-main').value = '';
+            document.getElementById('new-item-sale-pack').value = '';
+            document.getElementById('new-item-pur-pack').value = '';
+            document.getElementById('new-item-unit-pack').value = '';
+
+            // Populate group dropdown with existing groups from customers
+            const groupSelect = document.getElementById('new-item-group');
+            const existingGroups = [...new Set(window.erpData.customers.map(c => c.group_name).filter(g => g))];
+            let groupOptions = '<option value="General">General</option>';
+            existingGroups.forEach(g => {
+                if (g !== 'General') groupOptions += '<option value="' + g + '">' + g + '</option>';
+            });
+            groupSelect.innerHTML = groupOptions;
+
+            const modal = document.getElementById('modal-new-item');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // Focus on name field
+            setTimeout(() => document.getElementById('new-item-name').focus(), 100);
+        };
+
+        window.promptNewGroup = function() {
+            document.getElementById('inp-new-group').value = '';
+            document.getElementById('modal-new-group').classList.remove('hidden');
+            setTimeout(() => document.getElementById('inp-new-group').focus(), 100);
+        };
+
+        window.addNewGroup = function() {
+            const name = document.getElementById('inp-new-group').value.trim();
+            if (!name) return alert("Please enter a group name.");
+
+            const select = document.getElementById('new-item-group');
+            const option = document.createElement('option');
+            option.value = name;
+            option.text = name;
+            option.selected = true;
+            select.appendChild(option);
+
+            document.getElementById('modal-new-group').classList.add('hidden');
+        };
+
+        window.saveNewItem = async function() {
+            const name = document.getElementById('new-item-name').value.trim();
+            const group = document.getElementById('new-item-group').value;
+            const unitMain = document.getElementById('new-item-unit-main').value;
+            const unitPack = document.getElementById('new-item-unit-pack').value;
+            const convFactor = parseFloat(document.getElementById('new-item-conv-factor').value) || 1;
+            const stock = parseFloat(document.getElementById('new-item-stock').value) || 0;
+            const gst = parseFloat(document.getElementById('new-item-gst').value) || 0;
+            const hsn = document.getElementById('new-item-hsn').value.trim() || 'N/A';
+            const saleMain = parseFloat(document.getElementById('new-item-sale-main').value) || 0;
+            const purMain = parseFloat(document.getElementById('new-item-pur-main').value) || 0;
+            const salePack = parseFloat(document.getElementById('new-item-sale-pack').value) || 0;
+            const purPack = parseFloat(document.getElementById('new-item-pur-pack').value) || 0;
+
+            if (!name) return alert("Item name is required!");
+            if (saleMain <= 0) return alert("Sales price is required!");
+
+            // Check if item already exists
+            const existing = window.erpData.products.find(p => p.name.toLowerCase() === name.toLowerCase());
+            if (existing) {
+                alert("Item '" + name + "' already exists in master!");
+                window.closeNewItemModal();
+                return;
+            }
+
+            const safeName = name.replace(/'/g, "''");
+            const safeGroup = group.replace(/'/g, "''");
+            const safeUnitPack = unitPack ? unitPack.replace(/'/g, "''") : '';
+
+            try {
+                // Insert into products table with all fields
+                await runQuery(
+                    "INSERT INTO products (name, rate, stock, unit_main, unit_pack, conv_factor, group_name, gst_percent, hsn_code, purchase_rate, sale_price_pack, purchase_price_pack) VALUES ('" 
+                    + safeName + "', " + saleMain + ", " + stock + ", '" + unitMain + "', '" 
+                    + (safeUnitPack || '') + "', " + convFactor + ", '" + safeGroup + "', " + gst + ", '" 
+                    + hsn + "', " + purMain + ", " + (salePack || 0) + ", " + (purPack || 0) + ")"
+                );
+
+                // Refresh data
+                await window.syncData();
+
+                // Close modal
+                window.closeNewItemModal();
+
+                // Auto-fill the newly created item in POS
+                document.getElementById('pos-item').value = name;
+                window.autoFillPrice();
+
+                alert("Item '" + name + "' created successfully!");
+
+            } catch (err) {
+                console.error("Error creating item:", err);
+                alert("Failed to create item: " + err.message);
+            }
+        };
+
+        // ========================================================
+        // MODIFIED AUTOCOMPLETE: Detect New Items
+        // ========================================================
+
+        // Store original filterAC to extend it
+        window._originalFilterAC = window.filterAC;
+
+        window.filterAC = function(inputId, dropId) {
+            const val = document.getElementById(inputId).value.toLowerCase().trim();
+            const drop = document.getElementById(dropId);
+            if (!drop) return;
+
+            drop.innerHTML = '';
+            if (!val) { 
+                drop.style.display = 'none'; 
+                return; 
+            }
+
+            // For POS item search only
+            if (inputId === 'pos-item') {
+                let matches = window.erpData.products.filter(p => p.name && p.name.toLowerCase().includes(val));
+
+                // If no matches found and user has typed at least 2 chars, show "Create New" option
+                if (matches.length === 0 && val.length >= 2) {
+                    let createDiv = document.createElement('div');
+                    createDiv.className = 'ac-item';
+                    createDiv.style.backgroundColor = '#ecfdf5';
+                    createDiv.style.borderLeft = '3px solid #10b981';
+                    createDiv.innerHTML = '<i class="fas fa-plus-circle text-emerald-500 mr-2"></i><span class="text-emerald-700">Create new item: <b>"' + document.getElementById(inputId).value + '"</b></span>';
+                    createDiv.onclick = function() {
+                        drop.style.display = 'none';
+                        window.openNewItemModal(document.getElementById(inputId).value);
+                    };
+                    drop.appendChild(createDiv);
+                    drop.style.display = 'block';
+                    return;
+                }
+
+                // Show matching products + create option at bottom
+                matches.slice(0, 7).forEach(p => {
+                    let div = document.createElement('div');
+                    div.className = 'ac-item';
+                    div.innerHTML = '<span class="font-bold">' + p.name + '</span> <span class="text-[9px] text-slate-400 ml-1">&#8377;' + (p.rate || 0) + ' | Stock: ' + (p.stock || 0) + '</span>';
+                    div.onclick = function() {
+                        document.getElementById(inputId).value = p.name;
+                        drop.style.display = 'none';
+                        window.autoFillPrice();
+                    };
+                    drop.appendChild(div);
+                });
+
+                // Always show "Create New" at bottom if user typed something
+                if (val.length >= 2) {
+                    let createDiv = document.createElement('div');
+                    createDiv.className = 'ac-item';
+                    createDiv.style.backgroundColor = '#f0fdf4';
+                    createDiv.style.borderTop = '2px dashed #bbf7d0';
+                    createDiv.innerHTML = '<i class="fas fa-plus text-emerald-500 mr-2"></i><span class="text-emerald-600 text-[11px]">Create new item...</span>';
+                    createDiv.onclick = function() {
+                        drop.style.display = 'none';
+                        window.openNewItemModal(document.getElementById(inputId).value);
+                    };
+                    drop.appendChild(createDiv);
+                }
+
+                drop.style.display = 'block';
+                return;
+            }
+
+            // For customer search, use original behavior
+            if (inputId === 'pos-cust') {
+                let list = window.erpData.customers.map(c => c.name);
+                let matches = list.filter(i => i && i.toLowerCase().includes(val)).slice(0, 8);
+                matches.forEach(m => {
+                    let div = document.createElement('div');
+                    div.className = 'ac-item';
+                    div.innerText = m;
+                    div.onclick = function() {
+                        document.getElementById(inputId).value = m;
+                        drop.style.display = 'none';
+                        if (document.getElementById('pos-item').value) window.handleUnitChange();
+                    };
+                    drop.appendChild(div);
+                });
+                drop.style.display = matches.length ? 'block' : 'none';
+                return;
+            }
+        };
     </script>
 </body>
 </html>
